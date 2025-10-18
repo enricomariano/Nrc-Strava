@@ -94,7 +94,7 @@ def save_json():
                 "name": act.name,
                 "type": act.type,
                 "start_date": act.start_date.isoformat(),
-                "elapsed_time_sec": act.elapsed_time.total_seconds() if act.elapsed_time else None,
+                "elapsed_time_sec": float(act.elapsed_time) if act.elapsed_time else None,
                 "distance_km": round(float(act.distance) / 1000, 2) if act.distance else None,
                 "average_speed_kmh": round(float(act.average_speed) * 3.6, 2) if act.average_speed else None,
                 "max_speed_kmh": round(float(act.max_speed) * 3.6, 2) if act.max_speed else None,
@@ -125,6 +125,7 @@ def save_json():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
