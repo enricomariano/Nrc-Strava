@@ -84,10 +84,48 @@ def streams(activity_id):
     except Exception as e:
         return f"❌ Errore nel recupero stream: {str(e)}", 500
 
+@app.route("/save-json")
+def save_json():
+    try:
+        all_acts = []
+        for act in client.get_activities(limit=200):
+            all_acts.append({
+                "id": act.id,
+                "name": act.name,
+                "type": act.type,
+                "start_date": act.start_date.isoformat(),
+                "elapsed_time_sec": act.elapsed_time.total_seconds() if act.elapsed_time else None,
+                "distance_km": round(float(act.distance) / 1000, 2) if act.distance else None,
+                "average_speed_kmh": round(float(act.average_speed) * 3.6, 2) if act.average_speed else None,
+                "max_speed_kmh": round(float(act.max_speed) * 3.6, 2) if act.max_speed else None,
+                "total_elevation_gain_m": act.total_elevation_gain,
+                "elev_high_m": act.elev_high,
+                "elev_low_m": act.elev_low,
+                "calories": act.calories,
+                "gear_id": act.gear_id,
+                "device_name": act.device_name,
+                "trainer": act.trainer,
+                "commute": act.commute,
+                "manual": act.manual,
+                "private": act.private,
+                "visibility": act.visibility,
+                "location_city": act.location_city,
+                "location_state": act.location_state,
+                "location_country": act.location_country,
+                "map_summary_polyline": act.map.summary_polyline if act.map else None
+            })
+        with open("attivita.json", "w") as f:
+            json.dump(all_acts, f, indent=2)
+        return f"✅ Salvate {len(all_acts)} attività in attivita.json"
+    except Exception as e:
+        return f"❌ Errore nel salvataggio attività: {str(e)}", 500
+
+
 # 🚀 Avvio compatibile con Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
