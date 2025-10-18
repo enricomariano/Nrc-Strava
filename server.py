@@ -57,7 +57,7 @@ def activities():
         return jsonify([{
             "id": a.id,
             "name": a.name,
-            "distance": a.distance.num,
+            "distance": a.distance.kilometers,
             "start_date": a.start_date.isoformat()
         } for a in acts])
     except Exception as e:
@@ -80,5 +80,6 @@ def streams(activity_id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
