@@ -173,7 +173,18 @@ def debug_token():
     except Exception as e:
         return f"❌ Errore nel debug token: {str(e)}", 500
 
+@app.route("/cached-activities")
+def cached_activities():
+    try:
+        with open("detailed_attivita.json") as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception as e:
+        return f"❌ Errore nel caricamento cache: {str(e)}", 500
+
+
 # 🚀 Avvio compatibile con Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
