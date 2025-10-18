@@ -57,11 +57,12 @@ def activities():
         return jsonify([{
             "id": a.id,
             "name": a.name,
-            "distance": a.distance.kilometers,
+            "distance_km": a.distance.get_num(unit='km'),
             "start_date": a.start_date.isoformat()
         } for a in acts])
     except Exception as e:
         return f"❌ Errore nel recupero attività: {str(e)}", 500
+
 
 # 📊 Stream biomeccanici
 @app.route("/streams/<int:activity_id>")
@@ -80,6 +81,7 @@ def streams(activity_id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
