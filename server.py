@@ -31,8 +31,8 @@ def callback():
             client_secret=os.getenv("STRAVA_CLIENT_SECRET"),
             code=code
         )
-        client.access_token = token
-        print("✅ Access token ricevuto:", token)
+        client.access_token = token['access_token']
+        print("✅ Access token ricevuto:", token['access_token'])
         return "✅ Token ricevuto e salvato"
     except Exception as e:
         return f"❌ Errore nel callback: {str(e)}", 500
@@ -68,5 +68,4 @@ def streams(activity_id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-
 
