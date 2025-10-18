@@ -1,13 +1,25 @@
 from flask import Flask, redirect, request, jsonify
 from stravalib.client import Client
-import os
+import os, json, time
 
 app = Flask(__name__)
 client = Client()
+
+# 🔁 Ricarica e refresh token se esiste
 if os.path.exists("token.json"):
     with open("token.json") as f:
         saved = json.load(f)
-        client.access_token = saved['access_token']
+        if time.time() > saved["expires_at"]:
+            refreshed = client.refresh_access_token(
+                client_id=os.getenv("STRAVA_CLIENT_ID"),
+                client_secret=os.getenv("STRAVA_CLIENT_SECRET"),
+                refresh_token=saved["refresh_token"]
+            )
+            client.access_token = refreshed["access_token"]
+            with open("token.json", "w") as f:
+                json.dump(refreshed, f)
+        else:
+            client.access_token = saved["access_token"]
 
 # 🔐 OAuth2 redirect
 @app.route("/authorize")
@@ -23,8 +35,6 @@ def authorize():
         return f"❌ Errore nella generazione URL OAuth: {str(e)}", 500
 
 # 🔑 Callback
-import json
-
 @app.route("/callback")
 def callback():
     try:
@@ -37,17 +47,15 @@ def callback():
             client_secret=os.getenv("STRAVA_CLIENT_SECRET"),
             code=code
         )
-        client.access_token = token['access_token']
+        client.access_token = token["access_token"]
 
-        # Salva token su disco
         with open("token.json", "w") as f:
             json.dump(token, f)
 
-        print("✅ Access token salvato:", token['access_token'])
+        print("✅ Access token salvato:", token["access_token"])
         return "✅ Token ricevuto e salvato"
     except Exception as e:
         return f"❌ Errore nel callback: {str(e)}", 500
-
 
 # 📌 Attività
 @app.route("/activities")
@@ -57,12 +65,11 @@ def activities():
         return jsonify([{
             "id": a.id,
             "name": a.name,
-            "distance_km": a.distance.get_num(unit='km'),
+            "distance_km": a.distance.get_num(unit="km"),
             "start_date": a.start_date.isoformat()
         } for a in acts])
     except Exception as e:
         return f"❌ Errore nel recupero attività: {str(e)}", 500
-
 
 # 📊 Stream biomeccanici
 @app.route("/streams/<int:activity_id>")
