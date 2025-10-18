@@ -4,6 +4,10 @@ import os
 
 app = Flask(__name__)
 client = Client()
+if os.path.exists("token.json"):
+    with open("token.json") as f:
+        saved = json.load(f)
+        client.access_token = saved['access_token']
 
 # 🔐 OAuth2 redirect
 @app.route("/authorize")
@@ -19,6 +23,8 @@ def authorize():
         return f"❌ Errore nella generazione URL OAuth: {str(e)}", 500
 
 # 🔑 Callback
+import json
+
 @app.route("/callback")
 def callback():
     try:
@@ -32,10 +38,16 @@ def callback():
             code=code
         )
         client.access_token = token['access_token']
-        print("✅ Access token ricevuto:", token['access_token'])
+
+        # Salva token su disco
+        with open("token.json", "w") as f:
+            json.dump(token, f)
+
+        print("✅ Access token salvato:", token['access_token'])
         return "✅ Token ricevuto e salvato"
     except Exception as e:
         return f"❌ Errore nel callback: {str(e)}", 500
+
 
 # 📌 Attività
 @app.route("/activities")
@@ -68,4 +80,5 @@ def streams(activity_id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
