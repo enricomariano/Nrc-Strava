@@ -36,7 +36,7 @@ def authorize():
     try:
         url = client.authorization_url(
             client_id=os.getenv("STRAVA_CLIENT_ID"),
-            redirect_uri=os.getenv("STRAVA_REDIRECT_URI"),
+          redirect_uri="https://nrc-strava.onrender.com/callback",
             scope=["activity:read_all"]
         )
         return redirect(url)
@@ -222,6 +222,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
