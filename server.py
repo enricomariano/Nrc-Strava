@@ -182,9 +182,34 @@ def cached_activities():
     except Exception as e:
         return f"❌ Errore nel caricamento cache: {str(e)}", 500
 
+@app.route("/trend-data")
+def trend_data():
+    try:
+        trend = []
+        for summary in client.get_activities(limit=100):
+            act = client.get_activity(summary.id)
+            trend.append({
+                "date": act.start_date.date().isoformat(),
+                "distance_km": round(float(act.distance) / 1000, 2) if act.distance else None,
+                "elapsed_min": round(float(act.elapsed_time) / 60, 1) if act.elapsed_time else None,
+                "average_speed_kmh": round(float(act.average_speed) * 3.6, 2) if act.average_speed else None,
+                "average_watts": act.average_watts,
+                "weighted_watts": act.weighted_average_watts,
+                "calories": act.calories,
+                "kilojoules": act.kilojoules,
+                "average_heartrate": act.average_heartrate,
+                "elevation_gain": act.total_elevation_gain,
+                "kudos": act.kudos_count,
+                "comments": act.comment_count
+            })
+        return jsonify(trend)
+    except Exception as e:
+        return f"❌ Errore nel recupero trend: {str(e)}", 500
+
 
 # 🚀 Avvio compatibile con Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
