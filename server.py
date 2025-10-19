@@ -13,17 +13,27 @@ client = Client()
 if os.path.exists("token.json"):
     with open("token.json") as f:
         saved = json.load(f)
-        if time.time() > saved["expires_at"]:
-            refreshed = client.refresh_access_token(
-                client_id=os.getenv("STRAVA_CLIENT_ID"),
-                client_secret=os.getenv("STRAVA_CLIENT_SECRET"),
-                refresh_token=saved["refresh_token"]
-            )
-            client.access_token = refreshed["access_token"]
-            with open("token.json", "w") as f:
-                json.dump(refreshed, f)
-        else:
-            client.access_token = saved["access_token"]
+
+    if time.time() > saved["expires_at"]:
+        refreshed = client.refresh_access_token(
+            client_id=os.getenv("STRAVA_CLIENT_ID"),
+            client_secret=os.getenv("STRAVA_CLIENT_SECRET"),
+            refresh_token=saved["refresh_token"]
+        )
+        client.set_token(
+            refreshed["access_token"],
+            refresh_token=refreshed["refresh_token"],
+            expires_at=refreshed["expires_at"]
+        )
+        with open("token.json", "w") as f:
+            json.dump(refreshed, f)
+    else:
+        client.set_token(
+            saved["access_token"],
+            refresh_token=saved["refresh_token"],
+            expires_at=saved["expires_at"]
+        )
+
 
 # 🌐 Interfaccia HTML
 @app.route("/attivita")
@@ -134,8 +144,9 @@ def streams(activity_id):
 def save_detailed():
     try:
         detailed = []
-        for summary in client.get_activities(limit=200):
-            act = client.get_activity(summary.id)
+        activities = list(client.get_activities(limit=50))  # batch ridotto per evitare rate limit
+
+        for act in activities:
             detailed.append({
                 "id": act.id,
                 "name": act.name,
@@ -169,10 +180,14 @@ def save_detailed():
                 "location_country": act.location_country,
                 "map_summary_polyline": act.map.summary_polyline if act.map else None
             })
+
         with open("detailed_attivita.json", "w") as f:
             json.dump(detailed, f, indent=2)
+
+        print(f"✅ Salvate {len(detailed)} attività dettagliate")
         return f"✅ Salvate {len(detailed)} attività dettagliate in detailed_attivita.json"
     except Exception as e:
+        print("❌ Errore nel salvataggio:", str(e))
         return f"❌ Errore nel salvataggio dettagliato: {str(e)}", 500
 
 # 🔍 Debug token
@@ -231,6 +246,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
