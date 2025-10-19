@@ -64,6 +64,7 @@ def callback():
             code=code
         )
         client.access_token = token["access_token"]
+        client.refresh_token = token["refresh_token"]
 
         with open("token.json", "w") as f:
             json.dump(token, f)
@@ -80,9 +81,9 @@ def callback():
 def activities():
     try:
         enriched = []
-        for summary in client.get_activities(limit=50):
-            act = client.get_activity(summary.id)
-            enriched.append({
+       activities = list(client.get_activities(limit=50))  # riduci il batch
+
+                enriched.append({
                 "id": act.id,
                 "name": act.name,
                 "type": act.type,
@@ -229,6 +230,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
