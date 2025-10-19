@@ -84,16 +84,16 @@ async function loadWeeklyAnalysis() {
 }
 
 window.onload = () => {
- fetch("/debug/token")
-    .then(res => res.json())
-    .then(data => {
-      if (!data.valid) {
-     window.location.href = `https://www.strava.com/oauth/authorize?client_id=134273&response_type=code&redirect_uri=https://nrc-strava.onrender.com/callback&approval_prompt=force&scope=activity:read_all`;
-
-        loadAllActivities();
-        loadWeeklyAnalysis();
-      }
-    })
+fetch("/debug/token")
+  .then(res => res.json())
+  .then(data => {
+    if (!data.access_token || data.expires_in_sec < 0) {
+      window.location.href = `https://www.strava.com/oauth/authorize?client_id=134273&response_type=code&redirect_uri=https://nrc-strava.onrender.com/callback&approval_prompt=force&scope=activity:read_all`;
+    } else {
+      loadAllActivities();
+      loadWeeklyAnalysis();
+    }
+  })
     .catch(err => {
       console.error("Errore controllo token:", err);
       document.getElementById("activityList").innerHTML = "<p>Errore nel controllo token</p>";
@@ -209,5 +209,6 @@ async function showDetails(id) {
 </script>
 </body>
 </html>
+
 
 
