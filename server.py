@@ -1,8 +1,8 @@
-from flask import Flask, redirect, request, jsonify
+from flask import Flask, redirect, request, jsonify, render_template
 from stravalib.client import Client
 import os, json, time
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 client = Client()
 
 # 🔁 Ricarica e refresh token se esiste
@@ -20,6 +20,11 @@ if os.path.exists("token.json"):
                 json.dump(refreshed, f)
         else:
             client.access_token = saved["access_token"]
+
+# 🌐 Interfaccia HTML
+@app.route("/attivita")
+def attivita():
+    return render_template("attivita.html")
 
 # 🔐 OAuth2 redirect
 @app.route("/authorize")
@@ -56,6 +61,8 @@ def callback():
         return "✅ Token ricevuto e salvato"
     except Exception as e:
         return f"❌ Errore nel callback: {str(e)}", 500
+
+
 
 # 📌 Attività dettagliate per frontend
 @app.route("/activities")
@@ -211,5 +218,6 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
