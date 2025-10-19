@@ -1,6 +1,10 @@
 from flask import Flask, redirect, request, jsonify, render_template
 from stravalib.client import Client
+from dotenv import load_dotenv
 import os, json, time
+
+# 🔧 Carica variabili da .env (solo in locale)
+load_dotenv()
 
 app = Flask(__name__, template_folder="templates")
 client = Client()
@@ -19,7 +23,7 @@ if os.path.exists("token.json"):
             with open("token.json", "w") as f:
                 json.dump(refreshed, f)
         else:
-            client.access_token = saved["access_token"]
+            client.access_token = saved["access_token"
 
 # 🌐 Interfaccia HTML
 @app.route("/attivita")
@@ -218,6 +222,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
