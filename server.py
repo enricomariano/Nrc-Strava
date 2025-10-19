@@ -23,7 +23,7 @@ if os.path.exists("token.json"):
             with open("token.json", "w") as f:
                 json.dump(refreshed, f)
         else:
-            client.access_token = saved["access_token"
+            client.access_token = saved["access_token"]
 
 # 🌐 Interfaccia HTML
 @app.route("/attivita")
@@ -222,6 +222,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
