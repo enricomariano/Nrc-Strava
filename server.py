@@ -144,41 +144,43 @@ def streams(activity_id):
 def save_detailed():
     try:
         detailed = []
-        activities = list(client.get_activities(limit=50))  # batch ridotto per evitare rate limit
+        summaries = list(client.get_activities(limit=50))  # batch ridotto per evitare rate limit
 
-        for act in activities:
+        for summary in summaries:
+            act = client.get_activity(summary.id)  # ✅ ottieni DetailedActivity
+
             detailed.append({
                 "id": act.id,
-                "name": act.name,
-                "type": act.type,
-                "start_date": act.start_date.isoformat(),
-                "elapsed_time_sec": float(act.elapsed_time) if act.elapsed_time else None,
-                "distance_km": round(float(act.distance) / 1000, 2) if act.distance else None,
-                "average_speed_kmh": round(float(act.average_speed) * 3.6, 2) if act.average_speed else None,
-                "max_speed_kmh": round(float(act.max_speed) * 3.6, 2) if act.max_speed else None,
-                "total_elevation_gain_m": act.total_elevation_gain,
-                "elev_high_m": act.elev_high,
-                "elev_low_m": act.elev_low,
-                "calories": act.calories,
-                "average_heartrate": act.average_heartrate,
-                "max_heartrate": act.max_heartrate,
-                "average_watts": act.average_watts,
-                "max_watts": act.max_watts,
-                "weighted_average_watts": act.weighted_average_watts,
-                "kudos_count": act.kudos_count,
-                "comment_count": act.comment_count,
-                "photo_count": act.photo_count,
-                "gear_id": act.gear_id,
+                "name": getattr(act, "name", None),
+                "type": getattr(act, "type", None),
+                "start_date": act.start_date.isoformat() if getattr(act, "start_date", None) else None,
+                "elapsed_time_sec": float(act.elapsed_time) if getattr(act, "elapsed_time", None) else None,
+                "distance_km": round(float(act.distance) / 1000, 2) if getattr(act, "distance", None) else None,
+                "average_speed_kmh": round(float(act.average_speed) * 3.6, 2) if getattr(act, "average_speed", None) else None,
+                "max_speed_kmh": round(float(act.max_speed) * 3.6, 2) if getattr(act, "max_speed", None) else None,
+                "total_elevation_gain_m": getattr(act, "total_elevation_gain", None),
+                "elev_high_m": getattr(act, "elev_high", None),
+                "elev_low_m": getattr(act, "elev_low", None),
+                "calories": getattr(act, "calories", None),
+                "average_heartrate": getattr(act, "average_heartrate", None),
+                "max_heartrate": getattr(act, "max_heartrate", None),
+                "average_watts": getattr(act, "average_watts", None),
+                "max_watts": getattr(act, "max_watts", None),
+                "weighted_average_watts": getattr(act, "weighted_average_watts", None),
+                "kudos_count": getattr(act, "kudos_count", None),
+                "comment_count": getattr(act, "comment_count", None),
+                "photo_count": getattr(act, "photo_count", None),
+                "gear_id": getattr(act, "gear_id", None),
                 "device_name": getattr(act, "device_name", None),
-                "trainer": act.trainer,
-                "commute": act.commute,
-                "manual": act.manual,
-                "private": act.private,
-                "visibility": act.visibility,
-                "location_city": act.location_city,
-                "location_state": act.location_state,
-                "location_country": act.location_country,
-                "map_summary_polyline": act.map.summary_polyline if act.map else None
+                "trainer": getattr(act, "trainer", None),
+                "commute": getattr(act, "commute", None),
+                "manual": getattr(act, "manual", None),
+                "private": getattr(act, "private", None),
+                "visibility": getattr(act, "visibility", None),
+                "location_city": getattr(act, "location_city", None),
+                "location_state": getattr(act, "location_state", None),
+                "location_country": getattr(act, "location_country", None),
+                "map_summary_polyline": act.map.summary_polyline if getattr(act, "map", None) else None
             })
 
         with open("detailed_attivita.json", "w") as f:
@@ -189,6 +191,7 @@ def save_detailed():
     except Exception as e:
         print("❌ Errore nel salvataggio:", str(e))
         return f"❌ Errore nel salvataggio dettagliato: {str(e)}", 500
+
 
 # 🔍 Debug token
 @app.route("/debug/token")
@@ -246,6 +249,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
