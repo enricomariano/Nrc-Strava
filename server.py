@@ -34,13 +34,20 @@ def attivita():
 @app.route("/authorize")
 def authorize():
     try:
+        redirect_uri = os.getenv("STRAVA_REDIRECT_URI")
+        if not redirect_uri:
+            # fallback hardcoded URI (solo per test)
+            redirect_uri = "https://nrc-strava.onrender.com/callback"
+
         url = client.authorization_url(
             client_id=os.getenv("STRAVA_CLIENT_ID"),
-          redirect_uri="https://nrc-strava.onrender.com/callback",
+            redirect_uri=redirect_uri,
             scope=["activity:read_all"]
         )
+        print("🔗 Redirect URI generato:", url)
         return redirect(url)
     except Exception as e:
+        print("❌ Errore OAuth:", str(e))
         return f"❌ Errore nella generazione URL OAuth: {str(e)}", 500
 
 # 🔑 Callback
@@ -64,8 +71,8 @@ def callback():
         print("✅ Access token salvato:", token["access_token"])
         return "✅ Token ricevuto e salvato"
     except Exception as e:
+        print("❌ Errore nel callback:", str(e))
         return f"❌ Errore nel callback: {str(e)}", 500
-
 
 
 # 📌 Attività dettagliate per frontend
@@ -222,6 +229,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
