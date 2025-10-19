@@ -76,13 +76,14 @@ def callback():
         return f"❌ Errore nel callback: {str(e)}", 500
 
 # 📌 Attività dettagliate per frontend
+# 📌 Attività dettagliate per frontend
 @app.route("/activities")
 def activities():
     try:
-          activities = list(client.get_activities(limit=50))  # ← questa riga deve essere indentata con 8 spazi o 2 tab
-          enriched = []
-           for act in activities
-                enriched.append({
+        activities = list(client.get_activities(limit=50))  # riduci il batch
+        enriched = []
+        for act in activities:
+            enriched.append({
                 "id": act.id,
                 "name": act.name,
                 "type": act.type,
@@ -112,7 +113,8 @@ def activities():
             })
         return jsonify(enriched)
     except Exception as e:
-      return f"❌ Errore nel recupero attività: {str(e)}", 500
+        return f"❌ Errore nel recupero attività: {str(e)}", 500
+
 
 # 📊 Stream biomeccanici
 @app.route("/streams/<int:activity_id>")
@@ -229,6 +231,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
