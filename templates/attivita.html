@@ -84,10 +84,10 @@ async function loadWeeklyAnalysis() {
 }
 
 window.onload = () => {
- fetch("/debug/token")
+  fetch("/debug/token")
     .then(res => res.json())
     .then(data => {
-      if (!data.valid) {
+      if (!data.access_token || data.expires_in_sec < 0) {
         window.location.href = `https://www.strava.com/oauth/authorize?client_id=134273&response_type=code&redirect_uri=https://nrc-strava.onrender.com/callback&approval_prompt=force&scope=activity:read_all`;
       } else {
         loadAllActivities();
@@ -100,15 +100,21 @@ window.onload = () => {
     });
 };
 
-async function loadAllActivities(){
+
+async function loadAllActivities() {
   try {
     const res = await fetch("/cached-activities");
-
     const acts = await res.json();
 
-      const list = document.getElementById("activityList");
-      list.innerHTML = "<p>⏳ Caricamento attività...</p>";
-      acts.forEach(a => {
+    const list = document.getElementById("activityList");
+    list.innerHTML = "";
+
+    if (!acts.length) {
+      list.innerHTML = "<p>⚠️ Nessuna attività trovata. Premi 'Aggiorna attività' per sincronizzare.</p>";
+      return;
+    }
+
+    acts.forEach(a => {
       const div = document.createElement("div");
       div.className = "activity-card";
       div.innerHTML = `<h3>${a.name}</h3><p>${a.distance_km.toFixed(1)} km</p>
@@ -117,9 +123,10 @@ async function loadAllActivities(){
     });
   } catch (err) {
     console.error("Errore fetch attività:", err);
-    document.getElementById("activityList").innerHTML = "<p>Errore nel caricamento attività</p>";
+    document.getElementById("activityList").innerHTML = "<p>❌ Errore nel caricamento attività</p>";
   }
 }
+
 
 async function showDetails(id) {
   const details = document.getElementById("activityDetails");
