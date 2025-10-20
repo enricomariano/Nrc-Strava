@@ -279,7 +279,7 @@ def debug_token():
             })
         else:
             return jsonify({ "error": "Nessun token salvato" }), 404
-  except Exception as e:
+except Exception as e:
       return jsonify({ "error": f"Errore nel debug token: {str(e)}" }), 500
 
 @app.route("/cached-activities")
@@ -320,6 +320,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
