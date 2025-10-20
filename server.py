@@ -223,7 +223,7 @@ def save_detailed():
             detailed.append({
                 "id": act.id,
                 "name": getattr(act, "name", None),
-                "type": str(getattr(act, "type", "")),
+               "type": str(getattr(act, "type", "")).replace("root='", "").replace("'", ""),
                 "start_date": act.start_date.isoformat() if getattr(act, "start_date", None) else None,
                 "elapsed_time_sec": float(act.elapsed_time) if getattr(act, "elapsed_time", None) else None,
                 "distance_km": round(float(act.distance) / 1000, 2) if getattr(act, "distance", None) else None,
@@ -320,6 +320,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
