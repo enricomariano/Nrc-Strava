@@ -188,7 +188,8 @@ def status():
             "rate_limits": rate
         })
     except Exception as e:
-     return jsonify({ "error": f"Errore diagnostica: {str(e)}" }), 500
+    return jsonify({ "error": f"Errore diagnostica: {str(e)}" }), 500
+
 
 @app.route("/gear-usage")
 def gear_usage():
@@ -278,8 +279,8 @@ def debug_token():
             })
         else:
             return jsonify({ "error": "Nessun token salvato" }), 404
-    except Exception as e:
-       return jsonify({ "error": f"Errore nel debug token: {str(e)}" }), 500
+  except Exception as e:
+    return jsonify({ "error": f"Errore nel debug token: {str(e)}" }), 500
 
 @app.route("/cached-activities")
 def cached_activities():
@@ -319,6 +320,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
