@@ -257,12 +257,11 @@ def save_detailed():
         with open("detailed_attivita.json", "w") as f:
             json.dump(detailed, f, indent=2)
 
-              print(f"✅ Salvate {len(detailed)} attività dettagliate")
+        print(f"✅ Salvate {len(detailed)} attività dettagliate")
         return f"✅ Salvate {len(detailed)} attività dettagliate in detailed_attivita.json"
     except Exception as e:
         print("❌ Errore nel salvataggio:", str(e))
         return jsonify({ "error": f"Errore nel salvataggio dettagliato: {str(e)}" }), 500
-
 
 # 🔍 Debug token
 @app.route("/debug/token")
@@ -320,6 +319,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
