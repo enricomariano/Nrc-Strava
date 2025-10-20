@@ -22,11 +22,17 @@
     #aiSummary { display: none; margin-top: 10px; }
   </style>
 </head>
-<body>
+  <body>
 <div class="layout">
   <div class="left" id="activityList"><p>Caricamento attività...</p></div>
   <div class="right" id="activityDetails">
     <p>Seleziona un’attività →</p>
+
+    <div class="widget" id="gearUsage">
+      <h3>🚴 Gear Usage</h3>
+      <ul id="gearList"><li>Caricamento...</li></ul>
+    </div>
+
     <div class="widget" id="aiSummary">
       <h3>🧠 Analisi settimanale</h3>
       <p id="summaryText">Caricamento...</p>
@@ -35,12 +41,31 @@
   </div>
 </div>
 
-<button id="toggleAnalysis" onclick="toggleAnalysis()">Analisi settimanale</button>
- <button onclick="fetch('/save-detailed').then(() => loadAllActivities())"
+<!-- Pulsanti fissi -->
+<button id="toggleAnalysis" onclick="toggleAnalysis()"
+        style="position:fixed; bottom:20px; right:20px; padding:10px 16px; font-size:14px;
+               background:#0078d7; color:white; border:none; border-radius:6px; cursor:pointer;">
+  Analisi settimanale
+</button>
+
+<button onclick="fetch('/save-detailed').then(() => loadAllActivities())"
         style="position:fixed; bottom:60px; right:20px; padding:10px 16px; font-size:14px;
                background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer;">
   🔄 Aggiorna attività
 </button>
+
+<button onclick="window.open('/export/csv')"
+        style="position:fixed; bottom:100px; right:20px; padding:10px 16px; font-size:14px;
+               background:#ffc107; color:black; border:none; border-radius:6px; cursor:pointer;">
+  📦 Esporta CSV
+</button>
+
+<button onclick="showStatus()"
+        style="position:fixed; bottom:140px; right:20px; padding:10px 16px; font-size:14px;
+               background:#17a2b8; color:white; border:none; border-radius:6px; cursor:pointer;">
+  🧪 Diagnostica
+</button>
+
 
 
 <script>
@@ -83,6 +108,150 @@ async function loadWeeklyAnalysis() {
   }
 }
 
+async function loadAllActivities() {
+  try {
+    const res = await fetch("/cached-activities");
+    const acts = await res.json();
+
+    const list = document.getElementById("activityList");
+    list.innerHTML = "";
+
+    if (!acts.length) {
+      list.innerHTML = "<p>⚠️ Nessuna attività trovata. Premi 'Aggiorna attività' per sincronizzare.</p>";
+      return;
+    }
+
+    acts.forEach(a => {
+      const div = document.createElement("div");
+      div.className = "activity-card";
+      div.innerHTML = `<h3>${a.name}</h3><p>${a.distance_km.toFixed(1)} km</p>
+                       <button onclick="showDetails(${a.id})">➔</button>`;
+      list.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Errore fetch attività:", err);
+    document.getElementById("activityList").innerHTML = "<p>❌ Errore nel caricamento attività</p>";
+  }
+}
+
+async function showDetails(id) {
+  const details = document.getElementById("activityDetails");
+  details.innerHTML = "<p>Caricamento dettagli...</p>";
+
+  try {
+    const res = await fetch("/cached-activities");
+    const acts = await res.json();
+    const act = acts.find(a => a.id === id);
+
+    const [streamRes, detailRes] = await Promise.all([
+      fetch(`/streams/${id}`),
+      fetch(`/details/${id}`)
+    ]);
+
+    const streams = await streamRes.json();
+    const extra = await detailRes.json();
+
+    details.innerHTML = `
+      <div class="widget">
+        <h2>${act.name}</h2>
+        <p>Distanza: ${act.distance_km.toFixed(1)} km</p>
+        <p>Dislivello: ${extra.total_elevation_gain_m || '–'} m</p>
+        <p>Tempo: ${(act.elapsed_time_sec / 60).toFixed(0)} min</p>
+        <p>Velocità media: ${act.average_speed_kmh || '–'} km/h</p>
+        <p>Potenza media: ${extra.average_watts || '–'} W</p>
+        <p>Energia: ${extra.calories?.toFixed(1) || '–'} kcal</p>
+        <p>HR medio: ${extra.average_heartrate || '–'} bpm</p>
+        <p>Altitudine max: ${extra.elev_high_m || '–'} m – min: ${extra.elev_low_m || '–'} m</p>
+        <div style="display:flex; gap:10px;">
+          <div id="map-${id}" style="width:50%; height:300px;"></div>
+          <canvas id="chart-${id}" style="width:50%; max-height:300px;"></canvas>
+        </div>
+      </div>
+    `;
+
+    const ctx = document.getElementById(`chart-${id}`).getContext("2d");
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: Array.from({ length: streams.velocity_smooth.length }, (_, i) => i),
+        datasets: [
+          { label: "Velocità (km/h)", data: streams.velocity_smooth, borderColor: "green", fill: false },
+          { label: "Altitudine (m)", data: streams.altitude, borderColor: "blue", fill: false },
+          { label: "HR (bpm)", data: streams.heartrate, borderColor: "red", fill: false },
+          { label: "Watt", data: streams.watts, borderColor: "orange", fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "top" },
+          title: { display: true, text: "Riepilogo attività" }
+        },
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: { title: { display: true, text: "Tempo (s)" } },
+          y: { title: { display: true, text: "Valore" } }
+        }
+      }
+    });
+
+    if (act.map_summary_polyline) {
+      const coords = polyline.decode(act.map_summary_polyline).map(([lat, lon]) => [lon, lat]);
+      const route = new ol.geom.LineString(coords).transform('EPSG:4326', 'EPSG:3857');
+      const routeFeature = new ol.Feature({ geometry: route });
+
+      const vectorLayer = new ol.layer.Vector({
+        source: new ol.source.Vector({ features: [routeFeature] }),
+        style: new ol.style.Style({
+          stroke: new ol.style.Stroke({ color: '#0078d7', width: 3 })
+        })
+      });
+
+      new ol.Map({
+        target: `map-${id}`,
+        layers: [
+          new ol.layer.Tile({ source: new ol.source.OSM() }),
+          vectorLayer
+        ],
+        view: new ol.View({
+          center: ol.proj.fromLonLat(coords[0]),
+          zoom: 13
+        })
+      });
+    }
+  } catch (err) {
+    console.error("Errore dettagli attività:", err);
+    details.innerHTML = "<p>❌ Impossibile caricare dettagli o stream</p>";
+  }
+}
+
+async function showStatus() {
+  try {
+    const res = await fetch("/status");
+    const data = await res.json();
+    alert(`🔐 Token valido: ${data.token.access_token ? "✅" : "❌"}\n⏳ Scade in: ${data.token.expires_in_sec}s\n📁 File attività: ${data.file_status["detailed_attivita.json"] ? "✅" : "❌"}\n📊 Rate limit: ${JSON.stringify(data.rate_limits)}`);
+  } catch (err) {
+    alert("❌ Errore nel recupero diagnostica");
+  }
+}
+
+async function loadGearUsage() {
+  try {
+    const res = await fetch("/gear-usage");
+    const data = await res.json();
+    const list = document.getElementById("gearList");
+    list.innerHTML = "";
+    for (const [gear, km] of Object.entries(data)) {
+      const li = document.createElement("li");
+      li.innerText = `${gear}: ${km.toFixed(1)} km`;
+      list.appendChild(li);
+    }
+  } catch (err) {
+    console.error("Errore gear usage:", err);
+    document.getElementById("gearList").innerHTML = "<li>❌ Errore nel caricamento</li>";
+  }
+}
+
 window.onload = () => {
   fetch("/debug/token")
     .then(res => res.json())
@@ -92,6 +261,7 @@ window.onload = () => {
       } else {
         loadAllActivities();
         loadWeeklyAnalysis();
+        loadGearUsage();
       }
     })
     .catch(err => {
@@ -99,7 +269,6 @@ window.onload = () => {
       document.getElementById("activityList").innerHTML = "<p>Errore nel controllo token</p>";
     });
 };
-
 
 async function loadAllActivities() {
   try {
