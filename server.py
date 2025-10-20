@@ -223,7 +223,7 @@ def save_detailed():
             detailed.append({
                 "id": act.id,
                 "name": getattr(act, "name", None),
-                "type": getattr(act, "type", None),
+                "type": str(getattr(act, "type", "")),
                 "start_date": act.start_date.isoformat() if getattr(act, "start_date", None) else None,
                 "elapsed_time_sec": float(act.elapsed_time) if getattr(act, "elapsed_time", None) else None,
                 "distance_km": round(float(act.distance) / 1000, 2) if getattr(act, "distance", None) else None,
@@ -241,13 +241,13 @@ def save_detailed():
                 "kudos_count": getattr(act, "kudos_count", None),
                 "comment_count": getattr(act, "comment_count", None),
                 "photo_count": getattr(act, "photo_count", None),
-                "gear_id": getattr(act, "gear_id", None),
-                "device_name": getattr(act, "device_name", None),
+               "gear_id": str(getattr(act, "gear_id", "")),
+                "device_name": str(getattr(act, "device_name", "")),
                 "trainer": getattr(act, "trainer", None),
                 "commute": getattr(act, "commute", None),
                 "manual": getattr(act, "manual", None),
                 "private": getattr(act, "private", None),
-                "visibility": getattr(act, "visibility", None),
+                "visibility": str(getattr(act, "visibility", "")),
                 "location_city": getattr(act, "location_city", None),
                 "location_state": getattr(act, "location_state", None),
                 "location_country": getattr(act, "location_country", None),
@@ -320,6 +320,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
