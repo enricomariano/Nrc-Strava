@@ -211,10 +211,14 @@ def gear_usage():
 def save_detailed():
     try:
         detailed = []
-        summaries = list(client.get_activities(limit=50))  # batch ridotto per evitare rate limit
+        summaries = list(client.get_activities(limit=50))
 
         for summary in summaries:
-            act = client.get_activity(summary.id)  # ✅ ottieni DetailedActivity
+            try:
+                act = client.get_activity(summary.id)
+            except Exception as e:
+                print(f"⚠️ Skipping activity {summary.id} → {str(e)}")
+                continue
 
             detailed.append({
                 "id": act.id,
@@ -316,6 +320,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
