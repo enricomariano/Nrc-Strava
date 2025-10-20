@@ -65,8 +65,8 @@ def authorize():
 def callback():
     try:
         code = request.args.get("code")
-        if not code:
-            return "❌ Nessun codice ricevuto", 400
+       if not code:
+    return jsonify({ "error": "Nessun codice ricevuto" }), 400
 
         token = client.exchange_code_for_token(
             client_id=os.getenv("STRAVA_CLIENT_ID"),
@@ -278,7 +278,7 @@ def debug_token():
                 "refresh_token": t["refresh_token"]
             })
         else:
-            return "❌ Nessun token salvato", 404
+            return jsonify({ "error": "Nessun token salvato" }), 404
     except Exception as e:
        return jsonify({ "error": f"Errore nel debug token: {str(e)}" }), 500
 
@@ -320,6 +320,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
