@@ -85,12 +85,12 @@ def callback():
         print("❌ Errore nel callback:", str(e))
         return f"❌ Errore nel callback: {str(e)}", 500
 
-# 📌 Attività dettagliate per frontend
+
 # 📌 Attività dettagliate per frontend
 @app.route("/activities")
 def activities():
     try:
-        activities = list(client.get_activities(limit=50))  # riduci il batch
+        activities = list(client.get_activities(limit=50))
         enriched = []
         for act in activities:
             enriched.append({
@@ -101,19 +101,6 @@ def activities():
                 "elapsed_time_sec": float(act.elapsed_time) if act.elapsed_time else None,
                 "distance_km": round(float(act.distance) / 1000, 2) if act.distance else None,
                 "average_speed_kmh": round(float(act.average_speed) * 3.6, 2) if act.average_speed else None,
-                "max_speed_kmh": round(float(act.max_speed) * 3.6, 2) if act.max_speed else None,
-                "total_elevation_gain_m": act.total_elevation_gain,
-                "calories": act.calories,
-                "average_watts": act.average_watts,
-                "max_watts": act.max_watts,
-                "weighted_average_watts": act.weighted_average_watts,
-                "average_heartrate": act.average_heartrate,
-                "max_heartrate": act.max_heartrate,
-                "kudos_count": act.kudos_count,
-                "comment_count": act.comment_count,
-                "photo_count": act.photo_count,
-                "gear_id": act.gear_id,
-                "device_name": getattr(act, "device_name", None),
                 "location": {
                     "city": act.location_city,
                     "state": act.location_state,
@@ -249,6 +236,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
