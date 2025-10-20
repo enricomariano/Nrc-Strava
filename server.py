@@ -126,6 +126,86 @@ def streams(activity_id):
     except Exception as e:
         return f"❌ Errore nel recupero stream: {str(e)}", 500
 
+@app.route("/analyze/week")
+def analyze_week():
+    try:
+        with open("detailed_attivita.json") as f:
+            data = json.load(f)
+
+        # Raggruppa per settimana
+        from collections import defaultdict
+        import datetime
+
+        weekly = defaultdict(lambda: {"distance": 0, "calories": 0, "watts": [], "hr": []})
+        for act in data:
+            date = datetime.datetime.fromisoformat(act["start_date"]).date()
+            week = date.isocalendar()[1]
+            key = f"Settimana {week}"
+
+            weekly[key]["distance"] += act.get("distance_km", 0)
+            weekly[key]["calories"] += act.get("calories", 0) or 0
+            if act.get("average_watts"): weekly[key]["watts"].append(act["average_watts"])
+            if act.get("average_heartrate"): weekly[key]["hr"].append(act["average_heartrate"])
+
+        labels = list(weekly.keys())
+        chart = {
+            "labels": labels,
+            "datasets": [
+                {"label": "Distanza (km)", "data": [round(weekly[w]["distance"], 1) for w in labels]},
+                {"label": "Calorie", "data": [round(weekly[w]["calories"], 1) for w in labels]},
+                {"label": "Potenza media", "data": [round(sum(weekly[w]["watts"]) / len(weekly[w]["watts"]), 1) if weekly[w]["watts"] else 0 for w in labels]},
+                {"label": "HR media", "data": [round(sum(weekly[w]["hr"]) / len(weekly[w]["hr"]), 1) if weekly[w]["hr"] else 0 for w in labels]}
+            ]
+        }
+
+        text = f"📊 Hai coperto {sum([weekly[w]['distance'] for w in labels]):.1f} km nelle ultime settimane, bruciando circa {sum([weekly[w]['calories'] for w in labels]):.0f} kcal. La potenza media è stata di {round(sum([sum(weekly[w]['watts']) for w in labels]) / max(1, sum([len(weekly[w]['watts']) for w in labels])), 1)} W."
+
+        return jsonify({"text": text, "chart": chart})
+    except Exception as e:
+        return f"❌ Errore analisi settimanale: {str(e)}", 500
+
+@app.route("/status")
+def status():
+    try:
+        token_info = {}
+        if os.path.exists("token.json"):
+            with open("token.json") as f:
+                t = json.load(f)
+            token_info = {
+                "access_token": t["access_token"],
+                "expires_in_sec": int(t["expires_at"] - time.time()),
+                "refresh_token": t["refresh_token"]
+            }
+
+        file_info = {
+            "detailed_attivita.json": os.path.exists("detailed_attivita.json")
+        }
+
+        rate = getattr(client, "rate_limits", {})
+        return jsonify({
+            "token": token_info,
+            "file_status": file_info,
+            "rate_limits": rate
+        })
+    except Exception as e:
+        return f"❌ Errore diagnostica: {str(e)}", 500
+
+@app.route("/gear-usage")
+def gear_usage():
+    try:
+        with open("detailed_attivita.json") as f:
+            data = json.load(f)
+
+        usage = {}
+        for act in data:
+            gear = act.get("gear_id", "Sconosciuto")
+            usage.setdefault(gear, 0)
+            usage[gear] += act.get("distance_km", 0)
+
+        return jsonify({k: round(v, 1) for k, v in usage.items()})
+    except Exception as e:
+        return f"❌ Errore gear usage: {str(e)}", 500
+
 # 💾 Salvataggio attività dettagliate
 @app.route("/save-detailed")
 def save_detailed():
@@ -236,6 +316,7 @@ def trend_data():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
