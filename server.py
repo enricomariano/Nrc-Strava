@@ -58,7 +58,7 @@ def authorize():
         return redirect(url)
     except Exception as e:
         print("❌ Errore OAuth:", str(e))
-        return f"❌ Errore nella generazione URL OAuth: {str(e)}", 500
+        return jsonify({ "error": f"Errore nella generazione URL OAuth: {str(e)}" }), 500
 
 # 🔑 Callback
 @app.route("/callback")
@@ -83,7 +83,7 @@ def callback():
         return "✅ Token ricevuto e salvato"
     except Exception as e:
         print("❌ Errore nel callback:", str(e))
-        return f"❌ Errore nel callback: {str(e)}", 500
+        return jsonify({ "error": f"Errore nel callback: {str(e)}" }), 500
 
 
 # 📌 Attività dettagliate per frontend
@@ -110,7 +110,7 @@ def activities():
             })
         return jsonify(enriched)
     except Exception as e:
-        return f"❌ Errore nel recupero attività: {str(e)}", 500
+        return jsonify({ "error": f"Errore nel recupero attività: {str(e)}" }), 500
 
 
 # 📊 Stream biomeccanici
@@ -124,7 +124,7 @@ def streams(activity_id):
         )
         return jsonify({k: v.data for k, v in data.items()})
     except Exception as e:
-        return f"❌ Errore nel recupero stream: {str(e)}", 500
+        return jsonify({ "error": f"Errore nel recupero stream: {str(e)}" }), 500
 
 @app.route("/analyze/week")
 def analyze_week():
@@ -162,7 +162,7 @@ def analyze_week():
 
         return jsonify({"text": text, "chart": chart})
     except Exception as e:
-        return f"❌ Errore analisi settimanale: {str(e)}", 500
+        return jsonify({ "error": f"Errore analisi settimanale: {str(e)}" }), 500
 
 @app.route("/status")
 def status():
@@ -188,7 +188,7 @@ def status():
             "rate_limits": rate
         })
     except Exception as e:
-        return f"❌ Errore diagnostica: {str(e)}", 500
+     return jsonify({ "error": f"Errore diagnostica: {str(e)}" }), 500
 
 @app.route("/gear-usage")
 def gear_usage():
@@ -204,8 +204,8 @@ def gear_usage():
 
         return jsonify({k: round(v, 1) for k, v in usage.items()})
     except Exception as e:
-        return f"❌ Errore gear usage: {str(e)}", 500
-
+        return jsonify({ "error": f"Errore gear usage: {str(e)}" }), 500
+        
 # 💾 Salvataggio attività dettagliate
 @app.route("/save-detailed")
 def save_detailed():
@@ -261,7 +261,7 @@ def save_detailed():
         return f"✅ Salvate {len(detailed)} attività dettagliate in detailed_attivita.json"
     except Exception as e:
         print("❌ Errore nel salvataggio:", str(e))
-        return f"❌ Errore nel salvataggio dettagliato: {str(e)}", 500
+   return jsonify({ "error": f"Errore nel salvataggio dettagliato: {str(e)}" }), 500
 
 
 # 🔍 Debug token
@@ -280,7 +280,7 @@ def debug_token():
         else:
             return "❌ Nessun token salvato", 404
     except Exception as e:
-        return f"❌ Errore nel debug token: {str(e)}", 500
+       return jsonify({ "error": f"Errore nel debug token: {str(e)}" }), 500
 
 @app.route("/cached-activities")
 def cached_activities():
@@ -289,7 +289,7 @@ def cached_activities():
             data = json.load(f)
         return jsonify(data)
     except Exception as e:
-        return f"❌ Errore nel caricamento cache: {str(e)}", 500
+       return jsonify({ "error": str(e) }), 500
 
 @app.route("/trend-data")
 def trend_data():
@@ -313,13 +313,14 @@ def trend_data():
             })
         return jsonify(trend)
     except Exception as e:
-        return f"❌ Errore nel recupero trend: {str(e)}", 500
+       return jsonify({ "error": f"Errore nel caricamento cache: {str(e)}" }), 500
 
 
 # 🚀 Avvio compatibile con Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
