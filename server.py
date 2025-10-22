@@ -225,6 +225,16 @@ def save_detailed():
         return jsonify({ "error": f"Errore nel salvataggio: {str(e)}" }), 500
 
 
+@app.route("/download-json")
+def download_json():
+    try:
+        with open("attivita.json") as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({ "error": f"Errore nel download: {str(e)}" }), 500
+
+
 
 # --------------------------------------
 # 📊 Analisi settimanale
@@ -269,6 +279,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
