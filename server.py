@@ -180,7 +180,11 @@ def save_detailed():
         # Carica attività già salvate
         if os.path.exists("attivita.json"):
             with open("attivita.json") as f:
-                existing = json.load(f)
+                try:
+                    existing = json.load(f)
+                except json.JSONDecodeError:
+                    print("⚠️ File attivita.json corrotto, inizializzo vuoto")
+                    existing = []
 
         existing_ids = {a["id"] for a in existing}
         summaries = islice(client.get_activities(), 50)
@@ -223,6 +227,7 @@ def save_detailed():
     except Exception as e:
         print(f"❌ Errore nel salvataggio: {str(e)}")
         return jsonify({ "error": f"Errore nel salvataggio: {str(e)}" }), 500
+
 
 
 @app.route("/download-json")
@@ -279,6 +284,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
