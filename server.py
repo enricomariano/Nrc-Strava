@@ -178,8 +178,8 @@ def save_detailed():
         existing = []
 
         # Carica attività già salvate
-        if os.path.exists("detailed_attivita.json"):
-            with open("detailed_attivita.json") as f:
+        if os.path.exists("attivita.json"):
+            with open("attivita.json") as f:
                 existing = json.load(f)
 
         existing_ids = {a["id"] for a in existing}
@@ -211,7 +211,7 @@ def save_detailed():
         updated = existing + detailed
         updated.sort(key=lambda a: a["start_date"] or "", reverse=True)
 
-        with open("detailed_attivita.json", "w") as f:
+        with open("attivita.json", "w") as f:
             json.dump(updated, f, indent=2)
 
         print(f"✅ Salvate {len(detailed)} nuove attività")
@@ -269,6 +269,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
