@@ -108,7 +108,7 @@ async function loadWeeklyAnalysis() {
 
 async function loadAllActivities() {
   try {
-    const res = await fetch("/cached-activities");
+    const res = await("/fetch("/attivita.json");
     const acts = await res.json();
 
     const list = document.getElementById("activityList");
@@ -137,7 +137,7 @@ async function showDetails(id) {
   details.innerHTML = "<p>Caricamento dettagli...</p>";
 
   try {
-    const res = await fetch("/cached-activities");
+    const res = await fetch("/attivita.json");
     const acts = await res.json();
     const act = acts.find(a => a.id === id);
 
