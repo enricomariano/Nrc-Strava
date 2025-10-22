@@ -108,7 +108,7 @@ async function loadWeeklyAnalysis() {
 
 async function loadAllActivities() {
   try {
-    const res = await("/fetch("/attivita.json");
+    const res = const res = await fetch("/attivita.json");
     const acts = await res.json();
 
     const list = document.getElementById("activityList");
