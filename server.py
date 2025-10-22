@@ -44,6 +44,23 @@ def ensure_valid_token():
 # 🌐 Rotte principali
 # --------------------------------------
 
+@app.route("/debug/token")
+def debug_token():
+    try:
+        if os.path.exists("token.json"):
+            with open("token.json") as f:
+                t = json.load(f)
+            return jsonify({
+                "access_token": t["access_token"],
+                "expires_at": t["expires_at"],
+                "expires_in_sec": int(t["expires_at"] - time.time()),
+                "refresh_token": t["refresh_token"]
+            })
+        else:
+            return jsonify({ "error": "Nessun token salvato" }), 404
+    except Exception as e:
+        return jsonify({ "error": f"Errore nel debug token: {str(e)}" }), 500
+
 @app.route("/attivita")
 def attivita():
     try:
@@ -232,6 +249,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
