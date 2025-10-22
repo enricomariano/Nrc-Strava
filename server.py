@@ -340,14 +340,16 @@ def trend_data():
             })
         return jsonify(trend)
     except Exception as e:
-       return jsonify({ "error": f"Errore nel caricamento cache: {str(e)}" }), 500
+        return jsonify({ "error": f"Errore nel caricamento cache: {str(e)}" }), 500
 
- @app.route("/download-json")
+
+@app.route("/download-json")
 def download_json():
     try:
-      return app.send_static_file("detailed_attivita.json")
+        return app.send_static_file("detailed_attivita.json")
     except Exception as e:
-      return jsonify({ "error": f"Errore nel download: {str(e)}" }), 500
+        return jsonify({ "error": f"Errore nel download: {str(e)}" }), 500
+
 
 # 🚀 Avvio compatibile con Render
 if __name__ == "__main__":
