@@ -22,22 +22,30 @@ def ensure_valid_token():
     with open("token.json") as f:
         saved = json.load(f)
 
-    # Se il token è scaduto, rinnova
-    if time.time() > saved["expires_at"]:
+    expires_at = saved.get("expires_at", 0)
+    access_token = saved.get("access_token")
+    refresh_token = saved.get("refresh_token")
+
+    if not access_token or not refresh_token:
+        raise Exception("Token incompleto: esegui /authorize")
+
+    if time.time() > expires_at:
         refreshed = client.refresh_access_token(
             client_id=os.getenv("STRAVA_CLIENT_ID"),
             client_secret=os.getenv("STRAVA_CLIENT_SECRET"),
-            refresh_token=saved["refresh_token"]
+            refresh_token=refresh_token
         )
         client.access_token = refreshed["access_token"]
         client.refresh_token = refreshed["refresh_token"]
-        refreshed["expires_at"] = refreshed["expires_at"]
+        client.token_expires_at = refreshed["expires_at"]
+
         with open("token.json", "w") as f:
             json.dump(refreshed, f)
         print("🔁 Token aggiornato")
     else:
-        client.access_token = saved["access_token"]
-        client.refresh_token = saved["refresh_token"]
+        client.access_token = access_token
+        client.refresh_token = refresh_token
+        client.token_expires_at = expires_at
 
 
 # --------------------------------------
@@ -47,17 +55,20 @@ def ensure_valid_token():
 @app.route("/debug/token")
 def debug_token():
     try:
-        if os.path.exists("token.json"):
-            with open("token.json") as f:
-                t = json.load(f)
-            return jsonify({
-                "access_token": t["access_token"],
-                "expires_at": t["expires_at"],
-                "expires_in_sec": int(t["expires_at"] - time.time()),
-                "refresh_token": t["refresh_token"]
-            })
-        else:
+        if not os.path.exists("token.json"):
             return jsonify({ "error": "Nessun token salvato" }), 404
+
+        with open("token.json") as f:
+            t = json.load(f)
+
+        expires_in = int(t["expires_at"] - time.time()) if "expires_at" in t else -1
+
+        return jsonify({
+            "access_token": t.get("access_token"),
+            "refresh_token": t.get("refresh_token"),
+            "expires_at": t.get("expires_at"),
+            "expires_in_sec": expires_in
+        })
     except Exception as e:
         return jsonify({ "error": f"Errore nel debug token: {str(e)}" }), 500
 
@@ -66,13 +77,16 @@ def attivita():
     try:
         if not os.path.exists("token.json"):
             return redirect("/authorize")
+
         with open("token.json") as f:
             t = json.load(f)
         if time.time() > t["expires_at"]:
             return redirect("/authorize")
+
         return render_template("attivita.html")
     except Exception as e:
-        return jsonify({"error": f"Errore attivita: {str(e)}"}), 500
+        return jsonify({ "error": f"Errore attivita: {str(e)}" }), 500
+
 
 
 @app.route("/authorize")
@@ -89,7 +103,6 @@ def authorize():
     except Exception as e:
         return jsonify({"error": f"Errore OAuth: {str(e)}"}), 500
 
-
 @app.route("/callback")
 def callback():
     try:
@@ -104,8 +117,9 @@ def callback():
         )
         with open("token.json", "w") as f:
             json.dump(token, f)
+
         print("✅ Token salvato correttamente")
-        return "✅ Token ricevuto e salvato"
+        return redirect("/attivita")
     except Exception as e:
         return jsonify({"error": f"Errore nel callback: {str(e)}"}), 500
 
@@ -154,6 +168,8 @@ def details(activity_id):
 # --------------------------------------
 # 💾 Salvataggio attività dettagliate
 # --------------------------------------
+from itertools import islice
+
 @app.route("/save-detailed")
 def save_detailed():
     try:
@@ -161,6 +177,7 @@ def save_detailed():
         detailed = []
         existing = []
 
+        # Carica attività già salvate
         if os.path.exists("detailed_attivita.json"):
             with open("detailed_attivita.json") as f:
                 existing = json.load(f)
@@ -193,6 +210,7 @@ def save_detailed():
 
         updated = existing + detailed
         updated.sort(key=lambda a: a["start_date"] or "", reverse=True)
+
         with open("detailed_attivita.json", "w") as f:
             json.dump(updated, f, indent=2)
 
@@ -203,7 +221,9 @@ def save_detailed():
             "total_count": len(updated)
         })
     except Exception as e:
-        return jsonify({"error": f"Errore nel salvataggio: {str(e)}"}), 500
+        print(f"❌ Errore nel salvataggio: {str(e)}")
+        return jsonify({ "error": f"Errore nel salvataggio: {str(e)}" }), 500
+
 
 
 # --------------------------------------
@@ -249,6 +269,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
