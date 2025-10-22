@@ -170,6 +170,8 @@ def details(activity_id):
 # --------------------------------------
 from itertools import islice
 
+from itertools import islice
+
 @app.route("/save-detailed")
 def save_detailed():
     try:
@@ -177,14 +179,16 @@ def save_detailed():
         detailed = []
         existing = []
 
-        # Carica attività già salvate
-        if os.path.exists("attivita.json"):
+        # Carica attività già salvate, protezione da file vuoto o corrotto
+        if os.path.exists("attivita.json") and os.path.getsize("attivita.json") > 0:
             with open("attivita.json") as f:
                 try:
                     existing = json.load(f)
                 except json.JSONDecodeError:
                     print("⚠️ File attivita.json corrotto, inizializzo vuoto")
                     existing = []
+        else:
+            existing = []
 
         existing_ids = {a["id"] for a in existing}
         summaries = islice(client.get_activities(), 50)
@@ -227,7 +231,7 @@ def save_detailed():
     except Exception as e:
         print(f"❌ Errore nel salvataggio: {str(e)}")
         return jsonify({ "error": f"Errore nel salvataggio: {str(e)}" }), 500
-
+        
 
 
 @app.route("/download-json")
@@ -284,6 +288,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
