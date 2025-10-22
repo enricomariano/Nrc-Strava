@@ -114,17 +114,20 @@ def activities():
 
 
 # 📊 Stream biomeccanici
-@app.route("/streams/<int:activity_id>")
-def streams(activity_id):
+@app.route("/details/<int:activity_id>")
+def details(activity_id):
     try:
-        data = client.get_activity_streams(
-            activity_id,
-            types=["time", "altitude", "velocity_smooth", "heartrate", "watts", "cadence"],
-            resolution="medium"
-        )
-        return jsonify({k: v.data for k, v in data.items()})
+        act = client.get_activity(activity_id)
+        return jsonify({
+            "total_elevation_gain_m": getattr(act, "total_elevation_gain", None),
+            "elev_high_m": getattr(act, "elev_high", None),
+            "elev_low_m": getattr(act, "elev_low", None),
+            "calories": getattr(act, "calories", None),
+            "average_heartrate": getattr(act, "average_heartrate", None),
+            "average_watts": getattr(act, "average_watts", None)
+        })
     except Exception as e:
-        return jsonify({ "error": f"Errore nel recupero stream: {str(e)}" }), 500
+        return jsonify({ "error": f"Errore dettagli attività: {str(e)}" }), 500
 
 @app.route("/analyze/week")
 def analyze_week():
@@ -178,8 +181,16 @@ def status():
             }
 
         file_info = {
-            "detailed_attivita.json": os.path.exists("detailed_attivita.json")
+            "detailed_attivita.json": os.path.exists("detailed_attivita.json"),
+            "valid_json": False
         }
+
+        try:
+            with open("detailed_attivita.json") as f:
+                json.load(f)
+            file_info["valid_json"] = True
+        except:
+            pass
 
         rate = getattr(client, "rate_limits", {})
         return jsonify({
@@ -189,7 +200,6 @@ def status():
         })
     except Exception as e:
         return jsonify({ "error": f"Errore diagnostico: {str(e)}" }), 500
-
 
 @app.route("/gear-usage")
 def gear_usage():
@@ -211,10 +221,19 @@ def gear_usage():
 @app.route("/save-detailed")
 def save_detailed():
     try:
+        ensure_valid_token()
         detailed = []
+        existing = []
+        if os.path.exists("detailed_attivita.json"):
+            with open("detailed_attivita.json") as f:
+                existing = json.load(f)
+
+        existing_ids = {a["id"] for a in existing}
         summaries = list(client.get_activities(limit=50))
 
         for summary in summaries:
+            if summary.id in existing_ids:
+                continue
             try:
                 act = client.get_activity(summary.id)
             except Exception as e:
@@ -224,7 +243,7 @@ def save_detailed():
             detailed.append({
                 "id": act.id,
                 "name": getattr(act, "name", None),
-               "type": str(getattr(act, "type", "")).replace("root='", "").replace("'", ""),
+                "type": str(getattr(act, "type", "")).replace("root='", "").replace("'", ""),
                 "start_date": act.start_date.isoformat() if getattr(act, "start_date", None) else None,
                 "elapsed_time_sec": float(act.elapsed_time) if getattr(act, "elapsed_time", None) else None,
                 "distance_km": round(float(act.distance) / 1000, 2) if getattr(act, "distance", None) else None,
@@ -242,7 +261,7 @@ def save_detailed():
                 "kudos_count": getattr(act, "kudos_count", None),
                 "comment_count": getattr(act, "comment_count", None),
                 "photo_count": getattr(act, "photo_count", None),
-               "gear_id": str(getattr(act, "gear_id", "")),
+                "gear_id": str(getattr(act, "gear_id", "")),
                 "device_name": str(getattr(act, "device_name", "")),
                 "trainer": getattr(act, "trainer", None),
                 "commute": getattr(act, "commute", None),
@@ -256,15 +275,14 @@ def save_detailed():
             })
 
         with open("detailed_attivita.json", "w") as f:
-            json.dump(detailed, f, indent=2)
+            json.dump(existing + detailed, f, indent=2)
 
-        print(f"✅ Salvate {len(detailed)} attività dettagliate")
-        return f"✅ Salvate {len(detailed)} attività dettagliate in detailed_attivita.json"
+        print(f"✅ Salvate {len(detailed)} nuove attività")
+        return f"✅ Salvate {len(detailed)} nuove attività in detailed_attivita.json"
     except Exception as e:
         print("❌ Errore nel salvataggio:", str(e))
         return jsonify({ "error": f"Errore nel salvataggio dettagliato: {str(e)}" }), 500
 
-# 🔍 Debug token
 @app.route("/debug/token")
 def debug_token():
     try:
@@ -286,11 +304,19 @@ def debug_token():
 @app.route("/cached-activities")
 def cached_activities():
     try:
-        with open("detailed_attivita.json") as f:
-            data = json.load(f)
+        file_info = { "valid_json": False }
+
+        try:
+            with open("detailed_attivita.json") as f:
+                data = json.load(f)
+            file_info["valid_json"] = True
+        except:
+            return jsonify({ "error": "❌ detailed_attivita.json non valido o assente", "file_status": file_info }), 500
+
         return jsonify(data)
     except Exception as e:
-       return jsonify({ "error": str(e) }), 500
+        return jsonify({ "error": str(e) }), 500
+
 
 @app.route("/trend-data")
 def trend_data():
@@ -316,11 +342,19 @@ def trend_data():
     except Exception as e:
        return jsonify({ "error": f"Errore nel caricamento cache: {str(e)}" }), 500
 
+    @app.route("/download-json")
+def download_json():
+    try:
+        return app.send_static_file("detailed_attivita.json")
+    except Exception as e:
+        return jsonify({ "error": f"Errore nel download: {str(e)}" }), 500
+
 
 # 🚀 Avvio compatibile con Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
