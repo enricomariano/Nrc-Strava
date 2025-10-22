@@ -168,10 +168,6 @@ def details(activity_id):
 # --------------------------------------
 # 💾 Salvataggio attività dettagliate
 # --------------------------------------
-from itertools import islice
-
-from itertools import islice
-
 @app.route("/save-detailed")
 def save_detailed():
     try:
@@ -288,6 +284,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
