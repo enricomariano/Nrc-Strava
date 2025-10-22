@@ -38,7 +38,19 @@ if os.path.exists("token.json"):
 # 🌐 Interfaccia HTML
 @app.route("/attivita")
 def attivita():
-    return render_template("attivita.html")
+    try:
+        if not os.path.exists("token.json"):
+            return redirect("/authorize")
+
+        with open("token.json") as f:
+            t = json.load(f)
+        if time.time() > t["expires_at"]:
+            return redirect("/authorize")
+
+        return render_template("attivita.html")
+    except Exception as e:
+        return jsonify({ "error": f"Errore attivita: {str(e)}" }), 500
+
 
 # 🔐 OAuth2 redirect
 @app.route("/authorize")
@@ -225,11 +237,15 @@ def save_detailed():
         detailed = []
         existing = []
         if os.path.exists("detailed_attivita.json"):
-            with open("detailed_attivita.json") as f:
-                existing = json.load(f)
+           updated = existing + detailed
+           updated.sort(key=lambda a: a["start_date"], reverse=True)
+           with open("detailed_attivita.json", "w") as f:
+               json.dump(updated, f, indent=2)
+ 
 
         existing_ids = {a["id"] for a in existing}
-        summaries = list(client.get_activities(limit=50))
+        from itertools import islice
+        summaries = islice(client.get_activities(), 50)
 
         for summary in summaries:
             if summary.id in existing_ids:
@@ -278,7 +294,12 @@ def save_detailed():
             json.dump(existing + detailed, f, indent=2)
 
         print(f"✅ Salvate {len(detailed)} nuove attività")
-        return f"✅ Salvate {len(detailed)} nuove attività in detailed_attivita.json"
+       return jsonify({
+           "message": f"✅ Salvate {len(detailed)} nuove attività",
+           "new_count": len(detailed),
+           "total_count": len(updated)
+})
+
     except Exception as e:
         print("❌ Errore nel salvataggio:", str(e))
         return jsonify({ "error": f"Errore nel salvataggio dettagliato: {str(e)}" }), 500
@@ -355,6 +376,7 @@ def download_json():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
