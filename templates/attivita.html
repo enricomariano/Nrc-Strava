@@ -233,6 +233,40 @@ async function showDetails(id) {
       });
 
       setTimeout(() => {
+        const map = new ol.Map({
+          target: `map-${id}`,
+          layers: [
+            new ol.layer.Tile({ source: new ol.source.OSM() }),
+            vectorLayer
+          ],
+          view: new ol.View({
+            center: ol.proj.fromLonLat(coords[0]),
+            zoom: 13
+          })
+        });
+        map.updateSize(); // ✅ forza il ridisegno
+      }, 150);
+    }
+  } catch (err) {
+    console.error("❌ Errore dettagli attività:", err);
+    details.innerHTML = "<p>❌ Impossibile caricare dettagli o stream</p>";
+  }
+}
+
+    // 🗺️ Mappa percorso
+    if (act.map_summary_polyline) {
+      const coords = polyline.decode(act.map_summary_polyline).map(([lat, lon]) => [lon, lat]);
+      const route = new ol.geom.LineString(coords).transform('EPSG:4326', 'EPSG:3857');
+      const routeFeature = new ol.Feature({ geometry: route });
+
+      const vectorLayer = new ol.layer.Vector({
+        source: new ol.source.Vector({ features: [routeFeature] }),
+        style: new ol.style.Style({
+          stroke: new ol.style.Stroke({ color: '#0078d7', width: 3 })
+        })
+      });
+
+      setTimeout(() => {
         new ol.Map({
           target: `map-${id}`,
           layers: [
