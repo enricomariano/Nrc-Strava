@@ -248,17 +248,23 @@ def save_detailed():
         else:
             existing = []
 
-        existing_ids = {a["id"] for a in existing}
         summaries = islice(client.get_activities(), 50)
 
         for summary in summaries:
-            #if summary.id in existing_ids:
-            #     continue
             try:
                 act = client.get_activity(summary.id)
             except Exception as e:
                 print(f"⚠️ Skipping {summary.id}: {e}")
                 continue
+
+            elapsed = None
+            duration_min = None
+            if hasattr(act, "elapsed_time") and act.elapsed_time:
+                try:
+                    elapsed = act.elapsed_time.total_seconds()
+                    duration_min = round(elapsed / 60, 1)
+                except Exception as e:
+                    print(f"⚠️ Errore durata per {act.id}: {e}")
 
             detailed.append({
                 "id": act.id,
@@ -270,7 +276,8 @@ def save_detailed():
                 "average_watts": getattr(act, "average_watts", None),
                 "average_heartrate": getattr(act, "average_heartrate", None),
                 "calories": getattr(act, "calories", None),
-                "elapsed_time_sec": act.elapsed_time.total_seconds() if hasattr(act.elapsed_time, "total_seconds") else None,
+                "elapsed_time_sec": elapsed,
+                "duration_min": duration_min,
                 "total_elevation_gain_m": getattr(act, "total_elevation_gain", None),
                 "elev_high_m": getattr(act, "elev_high", None),
                 "elev_low_m": getattr(act, "elev_low", None),
@@ -279,8 +286,14 @@ def save_detailed():
                 "gear_id": getattr(act, "gear_id", None)
             })
 
-        # 🔁 Unisci e ordina
-        updated = existing + detailed
+        # 🔁 Deduplica per ID, tenendo la versione più completa
+        merged = {a["id"]: a for a in existing}
+        for new in detailed:
+            old = merged.get(new["id"], {})
+            if sum(v is not None for v in new.values()) > sum(v is not None for v in old.values()):
+                merged[new["id"]] = new
+
+        updated = list(merged.values())
         updated.sort(key=lambda a: a["start_date"] or "", reverse=True)
 
         # 💾 Salva localmente
@@ -372,6 +385,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
