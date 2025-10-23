@@ -215,8 +215,15 @@ def streams(activity_id):
         types = ["velocity_smooth", "altitude", "heartrate", "watts"]
         stream_data = client.get_activity_streams(activity_id, types=types, resolution="medium")
 
+        # ✅ Verifica che sia una lista di Stream
+        if not isinstance(stream_data, list):
+            raise ValueError(f"Strava ha restituito un oggetto non valido: {stream_data}")
+
         # 🔁 Converti lista Stream → dict {type: data}
-        streams_by_type = {s.type: s.data for s in stream_data}
+        streams_by_type = {s.type: s.data for s in stream_data if hasattr(s, "type") and hasattr(s, "data")}
+
+        # 🧪 Log di debug
+        print(f"📊 Stream types disponibili: {list(streams_by_type.keys())}")
 
         return jsonify({
             "velocity_smooth": [round(v * 3.6, 1) for v in streams_by_type.get("velocity_smooth", [])],
@@ -227,6 +234,7 @@ def streams(activity_id):
     except Exception as e:
         print(f"❌ Errore stream {activity_id}: {e}")
         return jsonify({ "error": f"Errore stream: {str(e)}" }), 500
+
 
 
 
@@ -389,6 +397,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
