@@ -262,7 +262,7 @@ def cached_activities():
 @app.route("/analyze/week")
 def analyze_week():
     try:
-        with open("detailed_attivita.json") as f:
+        with open("attivita.json") as f:
             data = json.load(f)
 
         weekly = defaultdict(lambda: {"distance": 0, "calories": 0, "hr": []})
@@ -299,6 +299,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
