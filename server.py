@@ -240,8 +240,8 @@ def download_json():
         return jsonify({ "error": f"Errore nel download: {str(e)}" }), 500
 
 
-@app.route("/attivita.json")
-def serve_attivita_json():
+@app.route("/cached-activities")
+def cached_activities():
     try:
         if not os.path.exists("attivita.json") or os.path.getsize("attivita.json") == 0:
             return jsonify([])
@@ -252,7 +252,7 @@ def serve_attivita_json():
                 return jsonify([])
             return jsonify(json.loads(content))
     except Exception as e:
-        print(f"❌ Errore nel caricamento attivita.json: {e}")
+        print(f"❌ Errore nel caricamento attività: {e}")
         return jsonify({ "error": f"Errore nel caricamento attività: {str(e)}" }), 500
 
 
@@ -299,6 +299,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
