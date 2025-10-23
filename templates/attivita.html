@@ -36,18 +36,23 @@
   </div>
 </div>
 
-<button id="toggleAnalysis" onclick="toggleAnalysis()">Analisi settimanale</button>
-<button onclick="aggiornaAttivita()"
+  
+  <button id="aggiornaBtn" onclick="aggiornaAttivita()"
         style="position:fixed; bottom:60px; right:20px; padding:10px 16px; font-size:14px;
                background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer;">
   🔄 Aggiorna attività
 </button>
-<div id="updateMessage">✅ Attività aggiornate</div>
+<div id="updateMessage"
+     style="position:fixed; bottom:100px; right:20px; background:#0078d7; color:white;
+            padding:8px 12px; border-radius:6px; font-size:14px; display:none; z-index:1000;">
+  ✅ Attività aggiornate
+</div>
+
 
 <script>
 async function aggiornaAttivita() {
   try {
-    const btn = document.querySelector("button[onclick='aggiornaAttivita()']");
+    const btn = document.querySelector("#aggiornaBtn");
     btn.disabled = true;
     btn.innerText = "⏳ Aggiornamento...";
 
@@ -63,7 +68,7 @@ async function aggiornaAttivita() {
     btn.disabled = false;
     btn.innerText = "🔄 Aggiorna attività";
   } catch (err) {
-    console.error("Errore aggiornamento attività:", err);
+    console.error("❌ Errore aggiornamento attività:", err);
     alert("❌ Errore durante l'aggiornamento");
   }
 }
@@ -102,7 +107,7 @@ async function loadWeeklyAnalysis() {
       }
     });
   } catch (err) {
-    console.error("Errore analisi settimanale:", err);
+    console.error("❌ Errore analisi settimanale:", err);
     document.getElementById("summaryText").innerText = "⚠️ Nessuna analisi disponibile";
   }
 }
@@ -122,7 +127,7 @@ async function loadAllActivities() {
       list.appendChild(div);
     });
   } catch (err) {
-    console.error("Errore fetch attività:", err);
+    console.error("❌ Errore fetch attività:", err);
     document.getElementById("activityList").innerHTML = "<p>Errore nel caricamento attività</p>";
   }
 }
@@ -139,7 +144,7 @@ window.onload = () => {
       }
     })
     .catch(err => {
-      console.error("Errore controllo token:", err);
+      console.error("❌ Errore controllo token:", err);
       document.getElementById("activityList").innerHTML = "<p>Errore nel controllo token</p>";
     });
 };
