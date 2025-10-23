@@ -187,15 +187,26 @@ def details(activity_id):
     try:
         ensure_valid_token()
         act = client.get_activity(activity_id)
+
         return jsonify({
-            "elevation_gain": getattr(act, "total_elevation_gain", None),
-            "elev_high": getattr(act, "elev_high", None),
-            "elev_low": getattr(act, "elev_low", None),
+            "id": act.id,
+            "name": getattr(act, "name", None),
+            "distance_km": round(float(act.distance) / 1000, 2) if act.distance else None,
+            "elapsed_time_sec": getattr(act, "elapsed_time", None).total_seconds() if getattr(act, "elapsed_time", None) else None,
+            "total_elevation_gain_m": getattr(act, "total_elevation_gain", None),
+            "elev_high_m": getattr(act, "elev_high", None),
+            "elev_low_m": getattr(act, "elev_low", None),
+            "average_speed_kmh": round(float(act.average_speed) * 3.6, 2) if act.average_speed else None,
             "average_watts": getattr(act, "average_watts", None),
             "average_heartrate": getattr(act, "average_heartrate", None),
+            "calories": getattr(act, "calories", None),
+            "device_name": getattr(act, "device_name", None),
+            "gear_id": getattr(act, "gear_id", None),
+            "map_summary_polyline": getattr(act.map, "summary_polyline", None)
         })
     except Exception as e:
-        return jsonify({"error": f"Errore dettagli attività: {str(e)}"}), 500
+        print(f"❌ Errore dettagli attività {activity_id}: {e}")
+        return jsonify({ "error": f"Errore dettagli attività: {str(e)}" }), 500
 
 
 # --------------------------------------
@@ -352,6 +363,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
