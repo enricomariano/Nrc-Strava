@@ -240,18 +240,15 @@ def download_json():
         return jsonify({ "error": f"Errore nel download: {str(e)}" }), 500
 
 
-
 @app.route("/attivita.json")
 def serve_attivita_json():
     try:
         if not os.path.exists("attivita.json") or os.path.getsize("attivita.json") == 0:
-            print("⚠️ File attivita.json assente o vuoto, restituisco array vuoto")
             return jsonify([])
 
         with open("attivita.json") as f:
             content = f.read().strip()
             if not content or content == "null":
-                print("⚠️ Contenuto non valido, restituisco array vuoto")
                 return jsonify([])
             return jsonify(json.loads(content))
     except Exception as e:
@@ -302,6 +299,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
