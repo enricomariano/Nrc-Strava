@@ -215,15 +215,19 @@ def streams(activity_id):
         types = ["velocity_smooth", "altitude", "heartrate", "watts"]
         stream_data = client.get_activity_streams(activity_id, types=types, resolution="medium")
 
+        # 🔁 Converti lista Stream → dict {type: data}
+        streams_by_type = {s.type: s.data for s in stream_data}
+
         return jsonify({
-            "velocity_smooth": [round(v * 3.6, 1) for v in stream_data.get("velocity_smooth", {}).get("data", [])],
-            "altitude": stream_data.get("altitude", {}).get("data", []),
-            "heartrate": stream_data.get("heartrate", {}).get("data", []),
-            "watts": stream_data.get("watts", {}).get("data", [])
+            "velocity_smooth": [round(v * 3.6, 1) for v in streams_by_type.get("velocity_smooth", [])],
+            "altitude": streams_by_type.get("altitude", []),
+            "heartrate": streams_by_type.get("heartrate", []),
+            "watts": streams_by_type.get("watts", [])
         })
     except Exception as e:
         print(f"❌ Errore stream {activity_id}: {e}")
         return jsonify({ "error": f"Errore stream: {str(e)}" }), 500
+
 
 
 
@@ -385,6 +389,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
