@@ -252,8 +252,8 @@ def save_detailed():
         summaries = islice(client.get_activities(), 50)
 
         for summary in summaries:
-            if summary.id in existing_ids:
-                continue
+            #if summary.id in existing_ids:
+            #     continue
             try:
                 act = client.get_activity(summary.id)
             except Exception as e:
@@ -372,6 +372,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
