@@ -4,12 +4,45 @@ from dotenv import load_dotenv
 import os, json, time, datetime
 from collections import defaultdict
 from itertools import islice
-
+import base64
+import requests  # 👈 aggiunto per GitHub API
 # 🔧 Carica variabili da .env (solo in locale)
 load_dotenv()
 
 app = Flask(__name__, template_folder="templates")
 client = Client()
+
+
+def push_to_github():
+    try:
+        repo = os.getenv("GITHUB_REPO")
+        path = os.getenv("GITHUB_FILE_PATH")
+        token = os.getenv("GITHUB_TOKEN")
+        url = f"https://api.github.com/repos/{repo}/contents/{path}"
+        headers = { "Authorization": f"Bearer {token}" }
+
+        # Leggi contenuto locale
+        with open("attivita.json", "r") as f:
+            content = f.read()
+        encoded = base64.b64encode(content.encode()).decode()
+
+        # Ottieni SHA del file esistente
+        get_resp = requests.get(url, headers=headers)
+        sha = get_resp.json().get("sha")
+
+        # Aggiorna file
+        payload = {
+            "message": "🔄 Update attivita.json from /save-detailed",
+            "content": encoded,
+            "sha": sha
+        }
+        put_resp = requests.put(url, headers=headers, json=payload)
+        if put_resp.status_code in [200, 201]:
+            print("✅ File aggiornato su GitHub")
+        else:
+            print(f"❌ Errore GitHub: {put_resp.status_code} → {put_resp.text}")
+    except Exception as e:
+        print(f"❌ Errore push GitHub: {e}")
 
 # --------------------------------------
 # 🛠️ Gestione token
@@ -175,7 +208,7 @@ def save_detailed():
         detailed = []
         existing = []
 
-        # Carica attività già salvate, protezione da file vuoto o corrotto
+        # 🛡️ Carica attività già salvate, protezione da file vuoto o corrotto
         if os.path.exists("attivita.json") and os.path.getsize("attivita.json") > 0:
             with open("attivita.json") as f:
                 try:
@@ -212,11 +245,31 @@ def save_detailed():
                 "gear_id": getattr(act, "gear_id", None)
             })
 
+        # 🔁 Unisci e ordina
         updated = existing + detailed
         updated.sort(key=lambda a: a["start_date"] or "", reverse=True)
 
+        # 💾 Salva localmente
         with open("attivita.json", "w") as f:
             json.dump(updated, f, indent=2)
+
+        # 🚀 Sincronizza su GitHub
+        push_to_github()
+
+        print(f"✅ Salvate {len(detailed)} nuove attività")
+        return jsonify({
+            "message": f"✅ Salvate {len(detailed)} nuove attività",
+            "new_count": len(detailed),
+            "total_count": len(updated)
+        })
+
+    except Exception as e:
+        print(f"❌ Errore nel salvataggio: {str(e)}")
+        return jsonify({ "error": f"Errore nel salvataggio: {str(e)}" }), 500
+
+
+        # 🔁 Aggiorna anche su GitHub
+        push_to_github()
 
         print(f"✅ Salvate {len(detailed)} nuove attività")
         return jsonify({
@@ -227,7 +280,7 @@ def save_detailed():
     except Exception as e:
         print(f"❌ Errore nel salvataggio: {str(e)}")
         return jsonify({ "error": f"Errore nel salvataggio: {str(e)}" }), 500
-        
+
 
 
 @app.route("/download-json")
@@ -299,6 +352,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
