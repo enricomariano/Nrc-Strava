@@ -237,7 +237,7 @@ def save_detailed():
         detailed = []
         existing = []
 
-        # 🛡️ Carica attività già salvate, protezione da file vuoto o corrotto
+        # 🛡️ Carica attività già salvate
         if os.path.exists("attivita.json") and os.path.getsize("attivita.json") > 0:
             with open("attivita.json") as f:
                 try:
@@ -270,6 +270,11 @@ def save_detailed():
                 "average_watts": getattr(act, "average_watts", None),
                 "average_heartrate": getattr(act, "average_heartrate", None),
                 "calories": getattr(act, "calories", None),
+                "elapsed_time_sec": act.elapsed_time.total_seconds() if act.elapsed_time else None,
+                "total_elevation_gain_m": getattr(act, "total_elevation_gain", None),
+                "elev_high_m": getattr(act, "elev_high", None),
+                "elev_low_m": getattr(act, "elev_low", None),
+                "map_summary_polyline": getattr(act.map, "summary_polyline", None),
                 "device_name": getattr(act, "device_name", None),
                 "gear_id": getattr(act, "gear_id", None)
             })
@@ -292,20 +297,6 @@ def save_detailed():
             "total_count": len(updated)
         })
 
-    except Exception as e:
-        print(f"❌ Errore nel salvataggio: {str(e)}")
-        return jsonify({ "error": f"Errore nel salvataggio: {str(e)}" }), 500
-
-
-        # 🔁 Aggiorna anche su GitHub
-        push_to_github()
-
-        print(f"✅ Salvate {len(detailed)} nuove attività")
-        return jsonify({
-            "message": f"✅ Salvate {len(detailed)} nuove attività",
-            "new_count": len(detailed),
-            "total_count": len(updated)
-        })
     except Exception as e:
         print(f"❌ Errore nel salvataggio: {str(e)}")
         return jsonify({ "error": f"Errore nel salvataggio: {str(e)}" }), 500
@@ -381,6 +372,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
