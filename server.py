@@ -270,7 +270,7 @@ def save_detailed():
                 "average_watts": getattr(act, "average_watts", None),
                 "average_heartrate": getattr(act, "average_heartrate", None),
                 "calories": getattr(act, "calories", None),
-                "elapsed_time_sec": act.elapsed_time.total_seconds() if act.elapsed_time else None,
+                "elapsed_time_sec": act.elapsed_time.magnitude if act.elapsed_time else None,
                 "total_elevation_gain_m": getattr(act, "total_elevation_gain", None),
                 "elev_high_m": getattr(act, "elev_high", None),
                 "elev_low_m": getattr(act, "elev_low", None),
@@ -372,6 +372,7 @@ def analyze_week():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
