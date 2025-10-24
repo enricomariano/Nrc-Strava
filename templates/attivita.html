@@ -190,51 +190,49 @@ async function loadAllActivities() {
         }
       });
     }
-
 // 🗺️ Mappa
-try {
-  if (act.map_summary_polyline) {
-    const decoded = polyline.decode(act.map_summary_polyline);
-    if (!Array.isArray(decoded) || !decoded.length) {
-      console.warn(`⚠️ Polyline vuota per attività ${id}`);
-      document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
-    } else {
-      const coords = decoded.map(([lat, lon]) => [lon, lat]);
-      const route = new ol.geom.LineString(coords).transform('EPSG:4326', 'EPSG:3857');
-      const routeFeature = new ol.Feature({ geometry: route });
+if (act.map_summary_polyline) {
+  const decoded = polyline.decode(act.map_summary_polyline);
+  if (!Array.isArray(decoded) || !decoded.length) {
+    console.warn(`⚠️ Polyline vuota per attività ${id}`);
+    document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
+  } else {
+    const coords = decoded.map(([lat, lon]) => [lon, lat]);
+    const route = new ol.geom.LineString(coords).transform('EPSG:4326', 'EPSG:3857');
+    const routeFeature = new ol.Feature({ geometry: route });
 
-      const vectorLayer = new ol.layer.Vector({
-        source: new ol.source.Vector({ features: [routeFeature] }),
-        style: new ol.style.Style({
-          stroke: new ol.style.Stroke({ color: '#0078d7', width: 3 })
+    const vectorLayer = new ol.layer.Vector({
+      source: new ol.source.Vector({ features: [routeFeature] }),
+      style: new ol.style.Style({
+        stroke: new ol.style.Stroke({ color: '#0078d7', width: 3 })
+      })
+    });
+
+    // ⏳ Aspetta che il DOM sia pronto prima di inizializzare la mappa
+    setTimeout(() => {
+      const mapElement = document.getElementById(`map-${id}`);
+      mapElement.style.display = "block";
+
+      const map = new ol.Map({
+        target: `map-${id}`,
+        layers: [
+          new ol.layer.Tile({ source: new ol.source.OSM() }),
+          vectorLayer
+        ],
+        view: new ol.View({
+          center: ol.proj.fromLonLat(coords[0]),
+          zoom: 13
         })
       });
 
-      // ⏳ Aspetta che il DOM sia pronto prima di inizializzare la mappa
-      setTimeout(() => {
-        const mapElement = document.getElementById(`map-${id}`);
-        mapElement.style.display = "block";
-
-        const map = new ol.Map({
-          target: `map-${id}`,
-          layers: [
-            new ol.layer.Tile({ source: new ol.source.OSM() }),
-            vectorLayer
-          ],
-          view: new ol.View({
-            center: ol.proj.fromLonLat(coords[0]),
-            zoom: 13
-          })
-        });
-
-        setTimeout(() => map.updateSize(), 100); // ✅ forza il ridisegno
-        console.log(`🗺️ Mappa inizializzata per attività ${id}`);
-      }, 200);
-    }
-  } else {
-    console.warn(`⚠️ Nessuna polyline disponibile per attività ${id}`);
-    document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
+      setTimeout(() => map.updateSize(), 100); // ✅ forza il ridisegno
+      console.log(`🗺️ Mappa inizializzata per attività ${id}`);
+    }, 200);
   }
+} else {
+  console.warn(`⚠️ Nessuna polyline disponibile per attività ${id}`);
+  document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
+}
 } catch (err) {
   console.error("❌ Errore dettagli attività:", err);
   details.innerHTML = "<p>❌ Impossibile caricare dettagli o stream</p>";
