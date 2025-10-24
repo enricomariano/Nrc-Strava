@@ -132,36 +132,6 @@ async function loadAllActivities() {
   }
 }
 
-async function showDetails(id) {
-  const details = document.getElementById("activityDetails");
-  details.innerHTML = "<p>Caricamento dettagli...</p>";
-
-  try {
-    const res = await fetch("/cached-activities");
-    const acts = await res.json();
-    const act = acts.find(a => a.id === id);
-
-    const streamRes = await fetch(`/streams/${id}`);
-    const streams = await streamRes.json();
-
-    details.innerHTML = `
-      <div class="widget">
-        <h2>${act.name}</h2>
-        <p>Distanza: ${act.distance_km.toFixed(1)} km</p>
-        <p>Dislivello: ${act.total_elevation_gain_m || '–'} m</p>
-        <p>Tempo: ${act.elapsed_time_sec ? Math.round(act.elapsed_time_sec / 60) + " min" : "N/A"}</p>
-        <p>Velocità media: ${act.average_speed_kmh || '–'} km/h</p>
-        <p>Potenza media: ${act.average_watts || '–'} W</p>
-        <p>Energia: ${act.calories?.toFixed(1) || '–'} kcal</p>
-        <p>HR medio: ${act.average_heartrate || '–'} bpm</p>
-        <p>Altitudine max: ${act.elev_high_m || '–'} m – min: ${act.elev_low_m || '–'} m</p>
-        <div style="display:flex; gap:10px;">
-          <div id="map-${id}" style="width:50%; height:300px;"></div>
-          <canvas id="chart-${id}" style="width:50%; max-height:300px;"></canvas>
-        </div>
-      </div>
-    `;
-
     // 📈 Grafico attività
     if (streams.velocity_smooth?.length) {
       const ctx = document.getElementById(`chart-${id}`).getContext("2d");
@@ -219,48 +189,57 @@ async function showDetails(id) {
       });
     }
 
+    // 🗺️ Mappa percorso
+    try {
+      if (act.map_summary_polyline) {
+        const decoded = polyline.decode(act.map_summary_polyline);
+        if (!Array.isArray(decoded) || !decoded.length) {
+          console.warn(`⚠️ Polyline vuota o non valida per attività ${id}`);
+          document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
+          return;
+        }
 
- // 🗺️ Mappa percorso
-if (act.map_summary_polyline) {
-  const decoded = polyline.decode(act.map_summary_polyline);
-  if (!decoded.length) {
-    console.warn(`⚠️ Polyline vuota per attività ${id}`);
-    document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
-    return;
+        const coords = decoded.map(([lat, lon]) => [lon, lat]);
+        const route = new ol.geom.LineString(coords).transform('EPSG:4326', 'EPSG:3857');
+        const routeFeature = new ol.Feature({ geometry: route });
+
+        const vectorLayer = new ol.layer.Vector({
+          source: new ol.source.Vector({ features: [routeFeature] }),
+          style: new ol.style.Style({
+            stroke: new ol.style.Stroke({ color: '#0078d7', width: 3 })
+          })
+        });
+
+        setTimeout(() => {
+          const map = new ol.Map({
+            target: `map-${id}`,
+            layers: [
+              new ol.layer.Tile({ source: new ol.source.OSM() }),
+              vectorLayer
+            ],
+            view: new ol.View({
+              center: ol.proj.fromLonLat(coords[0]),
+              zoom: 13
+            })
+          });
+
+          map.updateSize();
+          console.log(`🗺️ Mappa inizializzata per attività ${id}`);
+        }, 200);
+      } else {
+        console.warn(`⚠️ Nessuna polyline disponibile per attività ${id}`);
+        document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
+      }
+    } catch (mapErr) {
+      console.error(`❌ Errore rendering mappa per attività ${id}:`, mapErr);
+      document.getElementById(`map-${id}`).innerHTML = "<p>❌ Errore nel rendering della mappa</p>";
+    }
+
+  } catch (err) {
+    console.error("❌ Errore dettagli attività:", err);
+    details.innerHTML = "<p>❌ Impossibile caricare dettagli o stream</p>";
   }
-
-  const coords = decoded.map(([lat, lon]) => [lon, lat]);
-  const route = new ol.geom.LineString(coords).transform('EPSG:4326', 'EPSG:3857');
-  const routeFeature = new ol.Feature({ geometry: route });
-
-  const vectorLayer = new ol.layer.Vector({
-    source: new ol.source.Vector({ features: [routeFeature] }),
-    style: new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: '#0078d7', width: 3 })
-    })
-  });
-
-  // ⏳ Aspetta che il DOM sia pronto prima di inizializzare la mappa
-  setTimeout(() => {
-    const map = new ol.Map({
-      target: `map-${id}`,
-      layers: [
-        new ol.layer.Tile({ source: new ol.source.OSM() }),
-        vectorLayer
-      ],
-      view: new ol.View({
-        center: ol.proj.fromLonLat(coords[0]),
-        zoom: 13
-      })
-    });
-
-    map.updateSize(); // ✅ forza il ridisegno
-    console.log(`🗺️ Mappa inizializzata per attività ${id}`);
-  }, 200);
-} else {
-  console.warn(`⚠️ Nessuna polyline disponibile per attività ${id}`);
-  document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
-}
+} // ✅ chiusura della funzione showDetails
 
 
 
