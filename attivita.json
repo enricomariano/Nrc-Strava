@@ -1,5 +1,24 @@
 [
   {
+    "id": 16242416579,
+    "name": "Afternoon Ride",
+    "type": "root='Ride'",
+    "start_date": "2025-10-24T13:47:57+00:00",
+    "distance_km": 19.31,
+    "average_speed_kmh": 17.09,
+    "average_watts": 111.4,
+    "average_heartrate": null,
+    "calories": 718.0,
+    "elapsed_time_sec": null,
+    "duration_min": null,
+    "total_elevation_gain_m": 469.0,
+    "elev_high_m": 200.4,
+    "elev_low_m": 118.4,
+    "map_summary_polyline": "abrsFmytmBlCsMT}@JUjMkJZ?dDfDNBPE|]ySnCyAxNuIfB_AbEpQ?NmFbEwEhDyFjEGX@l@KpBCJMLoG|BkIrAk@PGRfAlQALEJc@FIF?XhAlGd@xAh@rAx@nDLV^`@l@nBN\\FEWs@ECAFfBrExCxF|CrGfBxEf@lBN^ZNvAZrBJBGAGcABo@E_B_@USm@{BqBmFcBsDIGAJHJBKAGY]a@{@oA{BeAuBcAgCiAeDWYIA?HXPFLz@dCpBzEtAdChAdCDFF?BECGmAsBoByDiAkCwAcEQQK@^\\n@pB|@vBzAdDdBfDVr@HNN?AIe@w@gCyE{BkFo@sB]]IC@JPDNVp@lBpA~CnAnCt@pAv@lBNRH@BECIY]k@iA_A_B}@sBMSo@cB]q@s@_CS[KC?FXVf@`BjBrErCrFfD`H|AlEj@xBHF{AiFSa@q@iB_BkDe@s@i@kAc@q@kAaCQg@c@q@CWQYEWIGWq@m@qB]]E@BHPHNVl@jBtCxG`B|Cn@tAF@DEEMYWS[GYUa@q@gAiBaEIWm@mAy@mCU]IA?HNFJRl@jBtCtGbBdDl@rAN?CMYQa@gAmAsBiAgCg@}@YaA]u@g@eBYa@SG@FVNLTd@|AzCbH|AvCz@hBF@BCCMUQu@aBm@}@gAaCWo@qAuCw@eCQWG@X`@b@xAvBhFlAbCx@vArC~FvAnDlA`EXN|A`@bBJF?BEIGk@BeAKuA]QQaBgFuAkDmCmFmAwBy@kBWa@eAsCs@wB_@c@KA@J`@Vj@fB~AxDzCfGh@lAH@BECGoC_Fk@sAu@wAg@sA_AuCKOI@V\\l@pBnCnGVf@H@AMm@}@@JtBzDbDzGdB|Eh@tBJBaAcDaAmC_@_AsBwDOe@ECx@|Ax@pBDBDACMsDcHG]MIIUG??Hz@xA^z@J?CM_@_@Qe@m@cAm@wAKKGYEAAJNRpBxD`@`AFDFC?GEK[UkBuDe@gAYk@GCbAzBvB`ENb@LFBCCMo@}@q@qAKGIQCDNFJRv@|AVr@DBFC@GKQESOCQYQO@EFBJL@HyAoCsA_DE@\\x@nB~DPP?DC?]cAc@q@Wm@KGAS_AaBW}@c@aAEWOWMg@[]KEGOOk@[gBSq@q@_BSu@qAwGAKFOf@OHO?KEeAYuEKkAYeFJMt@S~HoAdE{AnAk@HSJwAAqAHOxTwPBM_@cBqAkFoAcGGESJuNjIwc@vW{@`@OCWU",
+    "device_name": "Garmin Edge 540",
+    "gear_id": "b15018759"
+  },
+  {
     "id": 16223121920,
     "name": "Afternoon Ride",
     "type": "root='Ride'",
