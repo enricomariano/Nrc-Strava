@@ -211,18 +211,27 @@ async function loadAllActivities() {
         })
       });
 
-      setTimeout(() => {
-        const map = new ol.Map({
-          target: `map-${id}`,
-          layers: [
-            new ol.layer.Tile({ source: new ol.source.OSM() }),
-            vectorLayer
-          ],
-          view: new ol.View({
-            center: ol.proj.fromLonLat(coords[0]),
-            zoom: 13
-          })
-        });
+    setTimeout(() => {
+  const mapElement = document.getElementById(`map-${id}`);
+  mapElement.style.display = "block"; // ✅ assicura che sia visibile
+
+  const map = new ol.Map({
+    target: `map-${id}`,
+    layers: [
+      new ol.layer.Tile({ source: new ol.source.OSM() }),
+      vectorLayer
+    ],
+    view: new ol.View({
+      center: ol.proj.fromLonLat(coords[0]),
+      zoom: 13
+    })
+  });
+
+  // ✅ Forza il ridisegno dopo che il layout è pronto
+  setTimeout(() => map.updateSize(), 100);
+  console.log(`🗺️ Mappa inizializzata per attività ${id}`);
+}, 200);
+
 
         map.updateSize();
         console.log(`🗺️ Mappa inizializzata per attività ${id}`);
