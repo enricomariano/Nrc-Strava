@@ -192,7 +192,6 @@ async function loadAllActivities() {
     }
 
 // 🗺️ Mappa
-// 🗺️ Mappa
 try {
   if (act.map_summary_polyline) {
     const decoded = polyline.decode(act.map_summary_polyline);
@@ -240,6 +239,8 @@ try {
   console.error("❌ Errore dettagli attività:", err);
   details.innerHTML = "<p>❌ Impossibile caricare dettagli o stream</p>";
 }
+} // ✅ chiusura della funzione showDetails
+
 
 
 window.onload = () => {
