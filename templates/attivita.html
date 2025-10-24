@@ -220,9 +220,16 @@ async function showDetails(id) {
     }
 
 
-   // 🗺️ Mappa percorso
+ // 🗺️ Mappa percorso
 if (act.map_summary_polyline) {
-  const coords = polyline.decode(act.map_summary_polyline).map(([lat, lon]) => [lon, lat]);
+  const decoded = polyline.decode(act.map_summary_polyline);
+  if (!decoded.length) {
+    console.warn(`⚠️ Polyline vuota per attività ${id}`);
+    document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
+    return;
+  }
+
+  const coords = decoded.map(([lat, lon]) => [lon, lat]);
   const route = new ol.geom.LineString(coords).transform('EPSG:4326', 'EPSG:3857');
   const routeFeature = new ol.Feature({ geometry: route });
 
@@ -247,11 +254,14 @@ if (act.map_summary_polyline) {
       })
     });
 
-    // ✅ Forza il ridisegno se il contenitore era inizialmente invisibile
-    map.updateSize();
+    map.updateSize(); // ✅ forza il ridisegno
     console.log(`🗺️ Mappa inizializzata per attività ${id}`);
   }, 200);
+} else {
+  console.warn(`⚠️ Nessuna polyline disponibile per attività ${id}`);
+  document.getElementById(`map-${id}`).innerHTML = "<p>⚠️ Nessun percorso disponibile</p>";
 }
+
 
 
 window.onload = () => {
