@@ -47,6 +47,10 @@
             padding:8px 12px; border-radius:6px; font-size:14px; display:none; z-index:1000;">
   ✅ Attività aggiornate
 </div>
+<div class="widget">
+  <h3>🗺️ Mappa generale</h3>
+  <div id="mainMap" style="width:100%; height:400px; background:#eee;"></div>
+</div>
 
 
 <script>
@@ -239,7 +243,38 @@ if (act.map_summary_polyline) {
 }
 } // ✅ chiusura della funzione showDetails
 
+// 🗺️ Mappa generale (fuori da showDetails)
+function initMainMap(coords) {
+  if (!Array.isArray(coords) || !coords.length) {
+    console.warn("⚠️ Nessuna coordinata valida per la mappa principale");
+    return;
+  }
 
+  const route = new ol.geom.LineString(coords).transform('EPSG:4326', 'EPSG:3857');
+  const routeFeature = new ol.Feature({ geometry: route });
+
+  const vectorLayer = new ol.layer.Vector({
+    source: new ol.source.Vector({ features: [routeFeature] }),
+    style: new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: '#28a745', width: 4 })
+    })
+  });
+
+  const map = new ol.Map({
+    target: "mainMap", // Assicurati che esista un <div id="mainMap">
+    layers: [
+      new ol.layer.Tile({ source: new ol.source.OSM() }),
+      vectorLayer
+    ],
+    view: new ol.View({
+      center: ol.proj.fromLonLat(coords[0]),
+      zoom: 13
+    })
+  });
+
+  requestAnimationFrame(() => map.updateSize());
+  console.log("🗺️ Mappa principale inizializzata");
+}
 
 window.onload = () => {
   fetch("/debug/token")
