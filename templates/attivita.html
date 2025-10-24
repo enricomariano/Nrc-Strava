@@ -160,7 +160,7 @@ async function loadAllActivities() {
         <p>HR medio: ${act.average_heartrate || '–'} bpm</p>
         <p>Altitudine max: ${act.elev_high_m || '–'} m – min: ${act.elev_low_m || '–'} m</p>
         <div style="display:flex; gap:10px;">
-          <div id="map-${id}" style="width:50%; height:300px;"></div>
+          <div id="map-${id}" style="width:50%; height:300px; background:#eee;"></div>
           <canvas id="chart-${id}" style="width:50%; max-height:300px;"></canvas>
         </div>
       </div>
